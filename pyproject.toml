@@ -1,0 +1,10 @@
+[project]
+name = "websight"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "huggingface-hub>=0.30.2",
+    "matplotlib>=3.10.1",
+]
