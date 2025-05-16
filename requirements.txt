@@ -1,0 +1,6 @@
+selenium
+pillow
+webdriver-manager
+pyautogui
+python-dotenv
+openai
