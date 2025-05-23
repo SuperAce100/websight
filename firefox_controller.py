@@ -16,6 +16,8 @@ from dotenv import load_dotenv
 from api_client import analyze_image
 from typing import Optional
 from pydantic import BaseModel
+from PIL import Image
+import io
 
 class ScreenElement(BaseModel):
     element_type: str
@@ -112,7 +114,7 @@ class BrowserController:
         
     def take_screenshot(self, filename=None):
         """
-        Take a screenshot of the entire screen including browser UI.
+        Take a screenshot of the browser window using Selenium and downscale to max 720p.
         If no filename is provided, it will use timestamp.
         """
         if filename is None:
@@ -123,16 +125,26 @@ class BrowserController:
         os.makedirs("screenshots", exist_ok=True)
         filepath = os.path.join("screenshots", filename)
         
-        # Take full screen screenshot using pyautogui
         try:
-            # Ensure the browser window is active
-            self.driver.switch_to.window(self.driver.current_window_handle)
-            # Small delay to ensure window activation
-            time.sleep(0.5)
-            # Take the screenshot
-            screenshot = pyautogui.screenshot()
-            screenshot.save(filepath)
-            print(f"Full screen screenshot saved as: {filepath}")
+            # Take screenshot using Selenium
+            screenshot = self.driver.get_screenshot_as_png()
+            
+            # Convert to PIL Image for processing
+            image = Image.open(io.BytesIO(screenshot))
+            width, height = image.size
+            
+            # Downscale if larger than 720p (1280x720)
+            if width > 1280 or height > 720:
+                # Calculate new dimensions maintaining aspect ratio
+                ratio = min(1280/width, 720/height)
+                new_width = int(width * ratio)
+                new_height = int(height * ratio)
+                
+                image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            image.save(filepath)
+            print(f"Browser window screenshot saved as: {filepath}")
+            
         except Exception as e:
             print(f"Error taking screenshot: {str(e)}")
         return filepath
@@ -173,6 +185,7 @@ if __name__ == "__main__":
         
     except Exception as e:
         print(f"Error: {e}")
+        
     finally:
         # Always close the browser
         if 'controller' in locals():

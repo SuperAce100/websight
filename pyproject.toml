@@ -5,6 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "httpx>=0.28.1",
     "huggingface-hub>=0.30.2",
     "matplotlib>=3.10.1",
+    "openai>=1.82.0",
+    "pillow>=11.2.1",
+    "pyautogui>=0.9.54",
+    "pydantic>=2.11.5",
+    "python-dotenv>=1.1.0",
+    "selenium>=4.33.0",
+    "webdriver-manager>=4.0.2",
 ]
