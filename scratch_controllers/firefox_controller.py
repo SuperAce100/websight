@@ -13,7 +13,7 @@ import time
 import pyautogui
 import base64
 from dotenv import load_dotenv
-from api_client import analyze_image
+from communicators.api_client import analyze_image
 from typing import Optional
 from pydantic import BaseModel
 

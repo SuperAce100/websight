@@ -1,63 +1,55 @@
-# Browser Controller
+# WebSight
 
-This tool allows you to control Firefox browser programmatically, take screenshots, and simulate clicks using Selenium WebDriver.
-
-## Prerequisites
-
-- Python 3.7 or higher
-- Mozilla Firefox browser installed
-- pip (Python package installer)
-
-## Setup
-
-1. Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-2. The GeckoDriver (Firefox driver) will be automatically downloaded and managed by webdriver-manager.
-
-## Usage
-
-The `BrowserController` class provides several useful methods:
-
-```python
-from firefox_controller import BrowserController
-
-# Create a controller instance
-controller = BrowserController()
-
-try:
-    # Navigate to a website
-    controller.navigate_to("https://www.example.com")
-    
-    # Take a screenshot (automatically saves with timestamp)
-    controller.take_screenshot()
-    
-    # Take a screenshot with custom filename
-    controller.take_screenshot("my_screenshot.png")
-    
-    # Click an element using CSS selector (default)
-    controller.click_element("#submit-button")
-    
-    # Click an element using XPath
-    controller.click_element("//button[@type='submit']", by=By.XPATH)
-    
-    # Click at specific coordinates
-    controller.click_at_coordinates(100, 200)
-    
-finally:
-    # Always close the browser when done
-    controller.close()
-```
-
-Screenshots are saved in the `screenshots` directory.
+A vision-based web automation agent powered by Llama 4 Maverick and Playwright.
 
 ## Features
+- Automate web tasks using natural language instructions
+- Vision-based decision making (analyzes screenshots)
+- Uses Playwright for browser automation
+- Integrates with OpenRouter Llama 4 Maverick for LLM and vision
 
-- Automatic GeckoDriver (Firefox) management
-- Screenshot capture with timestamp or custom filename
-- Click elements using CSS selectors or XPath
-- Click at specific coordinates
-- Waits for elements to be clickable before interacting
-- Automatic screenshots directory creation
+## Requirements
+- Python 3.12+
+- [OpenRouter API key](https://openrouter.ai/keys)
+
+## Installation
+1. Clone this repository:
+   ```bash
+   git clone <repo-url>
+   cd websight
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Set up your environment variables:
+   - Copy `env_template.txt` to `.env` and add your OpenRouter API key:
+     ```bash
+     cp env_template.txt .env
+     # Edit .env and set OPENROUTER_API_KEY
+     ```
+
+## Usage
+Run the main agent with a sample task:
+```bash
+python main.py
+```
+
+Or try the interactive demo:
+```bash
+python tests/demo.py
+```
+
+## Example Task
+- "Go to google.com and search for 'Llama 4 Maverick'"
+
+## Project Structure
+- `main.py` - Quick start example
+- `agent.py` - Main WebAgent logic
+- `browser.py` - Playwright browser wrapper
+- `llms.py` - LLM and vision API integration
+- `task.py` - Task management
+- `tests/` - Demos and test scripts
+
+## License
+MIT
