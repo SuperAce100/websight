@@ -1,6 +1,5 @@
-selenium
+playwright
+pydantic
 pillow
-webdriver-manager
-pyautogui
 python-dotenv
 openai
