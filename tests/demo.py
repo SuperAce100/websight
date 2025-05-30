@@ -7,7 +7,7 @@ using natural language instructions and vision-based decision making.
 """
 
 import os
-from agent import WebAgent
+from old.agent import WebAgent
 
 
 def interactive_demo():

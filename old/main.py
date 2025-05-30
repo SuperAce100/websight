@@ -5,7 +5,7 @@ WebSight - Vision-Based Web Agent
 Quick start example showing how to use the WebAgent for automated web tasks.
 """
 
-from agent import WebAgent
+from old.agent import WebAgent
 
 def main():
     """Quick start example."""
@@ -15,7 +15,7 @@ def main():
     
     try:
         # Example task - modify this to test different scenarios
-        task = "Go to google.com and search for 'Llama 4 Maverick'"
+        task = "Give me the score of the most recent NBA game."
         
         print(f"🚀 Executing task: {task}")
         result = agent.execute_task(task)
