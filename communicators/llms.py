@@ -33,17 +33,13 @@ def llm_call(
     kwargs: dict[str, Any] = {"model": model, "messages": messages}
 
     if response_format is not None:
-        # For Llama 4 Maverick, use the proper schema format
         schema = response_format.model_json_schema()
-        
-        # Debug: print the schema
-        print(f"🔍 Using schema for {response_format.__name__}: {json.dumps(schema, indent=2)}")
-        
+
         kwargs["response_format"] = {
             "type": "json_schema",
             "json_schema": {
                 "name": response_format.__name__,
-                "strict": False,  # Try without strict mode first
+                "strict": True,
                 "schema": schema,
             },
         }
@@ -54,9 +50,7 @@ def llm_call(
             raise ValueError("No valid response content received from the API")
 
         response_text = response.choices[0].message.content.strip()
-        print(f"🔍 Raw response: {response_text[:200]}...")
-        
-        # Parse the JSON response
+
         try:
             return response_format.model_validate_json(response_text)
         except Exception as e:
@@ -79,28 +73,23 @@ def llm_call_messages(
 
     if response_format is not None:
         schema = response_format.model_json_schema()
-        
-        # Debug: print what we're sending
-        print(f"🔍 Using model: {model}")
-        print(f"🔍 Schema: {json.dumps(schema, indent=2)}")
-        
+
         kwargs["response_format"] = {
             "type": "json_schema",
             "json_schema": {
                 "name": response_format.__name__,
-                "strict": False,  # Llama 4 Maverick might not support strict mode
+                "strict": True,
                 "schema": schema,
             },
         }
 
         response = client.chat.completions.create(**kwargs)
-        
+
         if not response.choices or not response.choices[0].message.content:
             raise ValueError("No valid response content received from the API")
-            
+
         response_text = response.choices[0].message.content.strip()
-        print(f"🔍 Raw response: {response_text}")
-        
+
         try:
             return response_format.model_validate_json(response_text)
         except Exception as e:
@@ -112,21 +101,46 @@ def llm_call_messages(
     return response.choices[0].message.content
 
 
-# Test function for debugging
+def llm_call_image(
+    image_base64: str,
+    text: str,
+    system_prompt: str | None = None,
+    model: str = text_model,
+) -> str:
+    """
+    Make a LLM call with an image
+    """
+    messages = [
+        {"role": "system", "content": system_prompt} if system_prompt else None,
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{image_base64}"},
+                },
+                {"type": "text", "text": text},
+            ],
+        },
+    ]
+    messages = [msg for msg in messages if msg is not None]
+    kwargs: dict[str, Any] = {"model": model, "messages": messages}
+    response = client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content
+
+
 def test_structured_output():
     """Test structured output with a simple model."""
-    
-    from pydantic import BaseModel
-    
+
     class TestResponse(BaseModel):
         message: str
         number: int
-        
+
     try:
         result = llm_call(
             prompt="Give me a test message and the number 42",
             response_format=TestResponse,
-            model="meta-llama/llama-4-maverick:free"
+            model="openai/gpt-4.1-mini",
         )
         print(f"✅ Test successful: {result}")
         return True
