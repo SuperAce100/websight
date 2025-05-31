@@ -132,36 +132,8 @@ def main():
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         print(f"{tag.capitalize():5} → {len(subset):,} rows  ({path})")
 
-    # LoRA YAML
-    cfg = {
-        "model_name_or_path": args.model,
-        "stage": "sft",
-        "do_train": True,
-        "dataset": {
-            "path": str(out_dir / "waveui_train.jsonl"),
-            "eval_path": str(out_dir / "waveui_val.jsonl"),
-            "format": "sharegpt",
-        },
-        "finetuning_type": "lora",
-        "bnb_4bit": True,
-        "lora_r": 64,
-        "lora_alpha": 16,
-        "num_train_epochs": 3,
-        "per_device_train_batch_size": 8,
-        "gradient_accumulation_steps": 32,
-        "learning_rate": 2e-4,
-        "lr_scheduler_type": "cosine",
-        "warmup_ratio": 0.05,
-        "logging_steps": 20,
-        "save_steps": 500,
-        "output_dir": "output/ui_tars_waveui_lora",
-        "bf16": True,
-    }
-    yaml_path = out_dir.parent / "train_waveui_lora.yaml"
-    yaml_path.write_text(yaml.dump(cfg, sort_keys=False))
-
     print("\n✅ Dataset ready.")
-    print(f"Train with:\n  llamafactory-cli train {yaml_path}")
+    print(f"Train with:\n  llamafactory-cli train train_waveui_lora.yaml")
     print(
         "Evaluate with:\n  llamafactory-cli evaluate "
         "--model output/ui_tars_waveui_lora "
