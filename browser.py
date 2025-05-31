@@ -23,15 +23,15 @@ class Browser:
         except RuntimeError:
             # No running loop, we're good
             pass
-        
+
         self.playwright = sync_playwright().start()
-        self.driver = self.playwright.firefox.launch(headless=False, timeout=120000)
+        self.driver = self.playwright.chromium.launch(headless=False, timeout=120000)
         self.context = self.driver.new_context()
         self.active_page = self.context.new_page()
 
     def _wait_for_load_state(self):
-        # self.active_page.wait_for_load_state("networkidle")
-        self.active_page.wait_for_timeout(3000)
+        self.active_page.wait_for_load_state("networkidle")
+        self.active_page.wait_for_timeout(5000)
 
     def click(self, x: int, y: int):
         """Click at specific coordinates."""

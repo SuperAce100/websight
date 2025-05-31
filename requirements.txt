@@ -1,5 +1,11 @@
 playwright
 pydantic
 pillow
+webdriver-manager
+pyautogui
+python-dotenv>=1.0.0
+openai>=1.0.0
+pydantic>=2.0.0
+httpx>=0.24.0
 python-dotenv
 openai

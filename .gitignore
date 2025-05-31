@@ -10,3 +10,7 @@ api_debug.log
 # Virtual environments
 .venv
 *.env
+
+screenshots/
+
+data/
