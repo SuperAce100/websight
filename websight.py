@@ -1,22 +1,40 @@
 import argparse
-from typing import List
-from pydantic import BaseModel
 from browser import Browser, BrowserState
+from communicators.prompts import (
+    planner_prompt,
+    planner_system_prompt,
+    next_action_prompt,
+    next_action_system_prompt,
+)
 from communicators.uitars import ui_tars_call, Action
-from communicators.llms import llm_call
+from communicators.llms import llm_call, llm_call_image
 from rich.console import Console
-import json
+
+PLANNING_MODEL = "openai/gpt-4.1-mini"
+NEXT_ACTION_MODEL = "openai/gpt-4.1-mini"
 
 
 class Agent:
     def __init__(self):
         self.browser = Browser()
         self.console = Console()
-        self.plan: list[str] = []
 
     def execute_action(self, next_action: str) -> Action | None:
         current_state = self.browser.get_state()
-        action = ui_tars_call(next_action, current_state.screenshot_base64)
+
+        if "http://" in next_action or "https://" in next_action:
+            url = next_action.strip()
+            if not url:
+                self.console.print("[red]Error:[/red] Invalid URL provided")
+                return None
+            self.browser.goto_url(url)
+            return Action(
+                action="goto_url",
+                args={"url": url},
+                reasoning=f"Navigated to {url}",
+            )
+
+        action = ui_tars_call(next_action, current_state.page_screenshot_base64)
         self.console.print(f"[green]Action:[/green] {action.action}")
         self.console.print(f"[green]Reasoning:[/green] {action.reasoning}")
 
@@ -57,24 +75,45 @@ class Agent:
             return None
         return action
 
-    def make_plan(
-        self, task: str, state: BrowserState, history: list[str]
-    ) -> list[str]:
-        pass
+    def make_plan(self, task: str) -> list[str]:
+        response = llm_call(
+            planner_prompt.format(task=task),
+            system_prompt=planner_system_prompt,
+            model=PLANNING_MODEL,
+        )
 
-    def choose_next_action(self):
-        pass
+        steps = []
+        for line in response.split("\n"):
+            if "<step>" in line and "</step>" in line:
+                step = line.split("<step>")[1].split("</step>")[0].strip()
+                steps.append(step)
+        return steps
+
+    def choose_next_action(
+        self, plan: list[str], state: BrowserState, history: list[tuple[str, str]]
+    ) -> tuple[str, str]:
+        response = llm_call_image(
+            state.page_screenshot_base64,
+            next_action_prompt.format(plan=plan, history=history),
+            system_prompt=next_action_system_prompt,
+            model=NEXT_ACTION_MODEL,
+        )
+
+        reasoning = response.split("<reasoning>")[1].split("</reasoning>")[0].strip()
+        action = response.split("<action>")[1].split("</action>")[0].strip()
+
+        return reasoning, action
 
     def run(self, task: str, max_iterations: int = 25):
         plan = self.make_plan(task)
         history = []
         for _ in range(max_iterations):
-            next_action = self.choose_next_action(
-                plan, self.browser.get_state(), history
-            )
-            if next_action is None:
+            state = self.browser.get_state()
+            reasoning, action = self.choose_next_action(plan, state, history)
+            history.append((reasoning, action))
+            if "finished" in action.lower():
                 break
-            self.execute_action(next_action)
+            self.execute_action(action)
 
 
 def main():
