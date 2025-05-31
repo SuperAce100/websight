@@ -50,7 +50,6 @@ def llm_call(
             raise ValueError("No valid response content received from the API")
 
         response_text = response.choices[0].message.content.strip()
-
         try:
             return response_format.model_validate_json(response_text)
         except Exception as e:
@@ -73,7 +72,6 @@ def llm_call_messages(
 
     if response_format is not None:
         schema = response_format.model_json_schema()
-
         kwargs["response_format"] = {
             "type": "json_schema",
             "json_schema": {
