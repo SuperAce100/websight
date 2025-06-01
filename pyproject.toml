@@ -18,6 +18,7 @@ dependencies = [
     "pyyaml>=6.0.2",
     "rich>=14.0.0",
     "selenium>=4.33.0",
+    "torchvision>=0.22.0",
     "tqdm>=4.67.1",
     "transformers>=4.52.4",
     "webdriver-manager>=4.0.2",

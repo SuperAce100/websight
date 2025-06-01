@@ -9,6 +9,8 @@ from communicators.prompts import (
 from communicators.uitars import ui_tars_call, Action
 from communicators.llms import llm_call, llm_call_image
 from rich.console import Console
+import re
+
 
 PLANNING_MODEL = "openai/gpt-4.1-mini"
 NEXT_ACTION_MODEL = "openai/gpt-4.1-mini"
@@ -19,14 +21,16 @@ class Agent:
         self.browser = Browser()
         self.console = Console()
 
-    def execute_action(self, next_action: str) -> Action | None:
+    def execute_action(
+        self, next_action: str, history: list[tuple[str, str]]
+    ) -> Action | None:
         current_state = self.browser.get_state()
 
-        if "http://" in next_action or "https://" in next_action:
-            url = next_action.strip()
-            if not url:
-                self.console.print("[red]Error:[/red] Invalid URL provided")
-                return None
+        url_pattern = r'https?://[^\s<>"]+|www\.[^\s<>"]+'
+        url_match = re.search(url_pattern, next_action)
+
+        if url_match:
+            url = url_match.group(0)
             self.browser.goto_url(url)
             return Action(
                 action="goto_url",
@@ -34,9 +38,10 @@ class Agent:
                 reasoning=f"Navigated to {url}",
             )
 
-        action = ui_tars_call(next_action, current_state.page_screenshot_base64)
-        self.console.print(f"[green]Action:[/green] {action.action}")
-        self.console.print(f"[green]Reasoning:[/green] {action.reasoning}")
+        action = ui_tars_call(
+            next_action, history, current_state.page_screenshot_base64
+        )
+        
 
         try:
             if action.action == "click":
@@ -106,14 +111,23 @@ class Agent:
 
     def run(self, task: str, max_iterations: int = 25):
         plan = self.make_plan(task)
+        self.console.print(f"[green]Plan:[/green]")
+        for i, step in enumerate(plan, 1):
+            self.console.print(f"{i}. {step}")
         history = []
         for _ in range(max_iterations):
             state = self.browser.get_state()
             reasoning, action = self.choose_next_action(plan, state, history)
+            self.console.print(f"[green]Reasoning:[/green] {reasoning}")
+            self.console.print(f"[green]Action:[/green] {action}")
             history.append((reasoning, action))
             if "finished" in action.lower():
+                self.console.print(
+                    f"[bold green]Task completed successfully[/bold green]"
+                )
                 break
-            self.execute_action(action)
+
+            self.execute_action(action, history)
 
 
 def main():
