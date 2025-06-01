@@ -67,14 +67,18 @@ CRITICAL RULES:
 - Use specific selectors and exact text
 - Wait for dynamic content when needed
 - Try alternatives if primary approach fails
-- Only return "FINISHED" when task is completely done
+- When you're done, return "FINISHED" and then your final response
 - Don't scroll unless absolutely necessary
 
 RESPONSE FORMAT:
 <reasoning>Brief analysis of current state and why this action advances the goal</reasoning>
 <action>Specific action (e.g., "Click the blue 'Login' button", "Type 'user@email.com' in email field", "Navigate to https://site.com")</action>
 
-Handle common patterns: loading states, forms, modals, authentication.
+IF YOU ARE FINISHED:
+<reasoning>Your reasoning here</reasoning>
+<action>FINISHED + your final response</action>
+
+Handle common patterns: loading states, forms, modals, authentication. Each Action should be a single step and be atomic (e.g. don't click on a button and then type in a text field).
 """
 
 next_action_prompt = """
