@@ -115,7 +115,11 @@ def llm_call_image(
             "content": [
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/png;base64,{image_base64}"},
+                    "image_url": {
+                        "url": f"data:image/png;base64,{image_base64}"
+                        if "data:image/png;base64," not in image_base64
+                        else image_base64
+                    },
                 },
                 {"type": "text", "text": text},
             ],

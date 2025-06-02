@@ -1,8 +1,13 @@
 # Use a pipeline as a high-level helper
+import re
 from transformers import pipeline
 from pydantic import BaseModel
+from rich.console import Console
+from communicators.prompts import common_browser_system_prompt
 
 pipe = pipeline("image-text-to-text", model="ByteDance-Seed/UI-TARS-1.5-7B")
+
+console = Console()
 
 
 class Action(BaseModel):
@@ -11,40 +16,85 @@ class Action(BaseModel):
     reasoning: str
 
 
-def ui_tars_call(prompt: str, image_base64: str) -> Action:
+def ui_tars_call(
+    prompt: str, history: list[tuple[str, str]], image_base64: str
+) -> Action:
     messages = [
+        *[
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "text", "text": f"Thought: {reasoning}\nAction: {action}"}
+                ],
+            }
+            for reasoning, action in history
+        ],
+        {
+            "role": "system",
+            "content": [
+                {
+                    "type": "text",
+                    "text": common_browser_system_prompt.format(
+                        language="English", instruction=prompt
+                    ),
+                }
+            ],
+        },
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": prompt},
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/png;base64,{image_base64}"},
+                    "image_url": {
+                        "url": f"data:image/png;base64,{image_base64}"
+                        if "data:image/png;base64," not in image_base64
+                        else image_base64
+                    },
                 },
             ],
-        }
+        },
     ]
     response = pipe(text=messages, max_new_tokens=1000)
     response_text = response[-1]["generated_text"][-1]["content"]
-    action = response_text.split("Action: ")[1]
-    reasoning = response_text.split("Thought: ")[1]
+
+    try:
+        response_text = "temp " + response_text
+        reasoning = response_text.split("Thought: ")[1].split("\nAction: ")[0].strip()
+        action = response_text.split("Action: ")[1].strip()
+    except Exception as e:
+        console.print(
+            f"[red]Error parsing UI-TARS response: {e}.[/red]\n[red]Response:[/red] {response_text}"
+        )
+        return Action(action="error", args={}, reasoning=response_text)
+
+    console.print(f"[blue]UI TARS Action:[/blue] {action}")
+    console.print(f"[blue]UI TARS Reasoning:[/blue] {reasoning}")
     return parse_action(action, reasoning)
 
 
 def parse_action(action: str, reasoning: str) -> Action:
     """Parse UI-TARS action into our Action format."""
     if action.startswith("click"):
-        coords = action.split("start_box='")[1].split("'")[0]
+        if "point='" in action:
+            coords = action.split("point='")[1].split("'")[0]
+        else:
+            coords = action.split("start_box='")[1].split("'")[0]
         x, y = map(int, coords.strip("()").split(","))
-        return Action(action="click", args={"x": str(x), "y": str(y)}, reasoning=reasoning)
+        return Action(
+            action="click", args={"x": str(x), "y": str(y)}, reasoning=reasoning
+        )
     elif action.startswith("left_double"):
         coords = action.split("start_box='")[1].split("'")[0]
         x, y = map(int, coords.strip("()").split(","))
-        return Action(action="left_double", args={"x": str(x), "y": str(y)}, reasoning=reasoning)
+        return Action(
+            action="left_double", args={"x": str(x), "y": str(y)}, reasoning=reasoning
+        )
     elif action.startswith("right_single"):
         coords = action.split("start_box='")[1].split("'")[0]
         x, y = map(int, coords.strip("()").split(","))
-        return Action(action="right_single", args={"x": str(x), "y": str(y)}, reasoning=reasoning)
+        return Action(
+            action="right_single", args={"x": str(x), "y": str(y)}, reasoning=reasoning
+        )
     elif action.startswith("drag"):
         start_coords = action.split("start_box='")[1].split("'")[0]
         end_coords = action.split("end_box='")[1].split("'")[0]
@@ -75,7 +125,8 @@ def parse_action(action: str, reasoning: str) -> Action:
             x, y = map(int, coords.strip("()").split(","))
         direction = action.split("direction='")[1].split("'")[0]
         return Action(
-            action="scroll", args={"x": str(x), "y": str(y), "direction": direction}
+            action="scroll",
+            args={"x": str(x), "y": str(y), "direction": direction},
             reasoning=reasoning,
         )
     elif action.startswith("wait"):
