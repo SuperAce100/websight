@@ -25,7 +25,7 @@ class Browser:
             pass
 
         self.playwright = sync_playwright().start()
-        self.driver = self.playwright.chromium.launch(headless=False, timeout=120000)
+        self.driver = self.playwright.chromium.launch(headless=True, timeout=120000)
         self.context = self.driver.new_context()
         self.active_page = self.context.new_page()
 
