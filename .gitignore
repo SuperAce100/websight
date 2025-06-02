@@ -14,3 +14,7 @@ api_debug.log
 screenshots/
 
 data/
+
+output/
+matx/
+LLaMA-Factory/

@@ -1,8 +1,8 @@
 ### model
 model_name_or_path: ByteDance-Seed/UI-TARS-1.5-7B
-quantization_bit: 4
-quantization_method: bnb # CHANGE TO BNB ON CUDA
-double_quantization: false 
+# quantization_bit: 4
+# quantization_method: bnb # CHANGE TO BNB ON CUDA
+# double_quantization: false 
 trust_remote_code: true
 image_max_pixels: 262144
 
@@ -39,7 +39,7 @@ num_train_epochs: 3
 lr_scheduler_type: cosine
 warmup_ratio: 0.05
 bf16: true
-fp16: true
+fp16: false
 ddp_timeout: 180000000
 
 ### eval
