@@ -10,15 +10,15 @@ from communicators.vlm import vlm_call, Action
 from communicators.llms import llm_call, llm_call_image
 from rich.console import Console
 import re
-
+from datetime import datetime
 
 PLANNING_MODEL = "openai/gpt-4.1-mini"
 NEXT_ACTION_MODEL = "openai/gpt-4.1-mini"
 
 
 class Agent:
-    def __init__(self, use_websight: bool = True):
-        self.browser = Browser()
+    def __init__(self, use_websight: bool = True, show_browser: bool = False):
+        self.browser = Browser(show_browser=show_browser)
         self.console = Console()
         self.use_websight = use_websight
 
@@ -40,7 +40,7 @@ class Agent:
             )
 
         action = vlm_call(
-            next_action, history, current_state.page_screenshot_base64, model="websight" if self.use_websight else "ui_tars"
+            next_action, history, current_state.page_screenshot_base64, model="websight" if self.use_websight else "ui_tars", console=self.console
         )
 
         try:
@@ -83,7 +83,7 @@ class Agent:
     def make_plan(self, task: str) -> list[str]:
         response = llm_call(
             planner_prompt.format(task=task),
-            system_prompt=planner_system_prompt,
+            system_prompt=planner_system_prompt.format(date=datetime.now().strftime("%Y-%m-%d")),
             model=PLANNING_MODEL,
         )
 
@@ -95,12 +95,12 @@ class Agent:
         return steps
 
     def choose_next_action(
-        self, plan: list[str], state: BrowserState, history: list[tuple[str, str]]
+        self, task: str, plan: list[str], state: BrowserState, history: list[tuple[str, str]]
     ) -> tuple[str, str]:
         response = llm_call_image(
             state.page_screenshot_base64,
-            next_action_prompt.format(plan=plan, history=history),
-            system_prompt=next_action_system_prompt,
+            next_action_prompt.format(plan=plan, history=history, instruction=task),
+            system_prompt=next_action_system_prompt.format(instruction=task, date=datetime.now().strftime("%Y-%m-%d"), url=state.page_url),
             model=NEXT_ACTION_MODEL,
         )
 
@@ -117,7 +117,7 @@ class Agent:
         history = []
         for _ in range(max_iterations):
             state = self.browser.get_state()
-            reasoning, action = self.choose_next_action(plan, state, history)
+            reasoning, action = self.choose_next_action(task, plan, state, history)
             self.console.print(f"[green]Reasoning:[/green] {reasoning}")
             self.console.print(f"[green]Action:[/green] {action}")
             history.append((reasoning, action))
@@ -125,7 +125,7 @@ class Agent:
                 self.console.print(
                     f"[bold green]Task completed successfully[/bold green]"
                 )
-                break
+                return action
 
             self.execute_action(action, history)
 
@@ -135,11 +135,12 @@ def main():
     parser.add_argument("--task", type=str, required=True)
     parser.add_argument("--max-iters", type=int, default=25)
     parser.add_argument("--use-websight", action="store_true")
+    parser.add_argument("--show-browser", action="store_true")
     args = parser.parse_args()
     task = args.task
     console = Console()
     console.print(f"[green]Task:[/green] {task}")
-    agent = Agent(use_websight=args.use_websight)
+    agent = Agent(use_websight=args.use_websight, show_browser=args.show_browser)
     result = agent.run(task, args.max_iters)
     if "Error" not in result:
         console.print(f"[green]Result:[/green] {result}")

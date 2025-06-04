@@ -15,7 +15,7 @@ class BrowserState(BaseModel):
 
 
 class Browser:
-    def __init__(self):
+    def __init__(self, show_browser: bool = False):
         # Check if we're in an async context and handle it
         try:
             loop = asyncio.get_running_loop()
@@ -25,12 +25,12 @@ class Browser:
             pass
 
         self.playwright = sync_playwright().start()
-        self.driver = self.playwright.chromium.launch(headless=True, timeout=120000)
+        self.driver = self.playwright.chromium.launch(headless=not show_browser, timeout=120000)
         self.context = self.driver.new_context()
         self.active_page = self.context.new_page()
 
     def _wait_for_load_state(self):
-        self.active_page.wait_for_load_state("networkidle")
+        # self.active_page.wait_for_load_state("networkidle")
         self.active_page.wait_for_timeout(5000)
 
     def click(self, x: int, y: int):
@@ -139,8 +139,7 @@ class Browser:
     def goto_url(self, url: str):
         """Navigate to a URL."""
         self.active_page.goto(url)
-        self.active_page.wait_for_load_state("networkidle", timeout=120000)
-        self.active_page.wait_for_timeout(6000)
+        self._wait_for_load_state()
 
     def get_state(self) -> BrowserState:
         """Get current browser state."""

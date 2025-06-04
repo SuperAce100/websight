@@ -31,7 +31,7 @@ def ui_tars_call(
 
 
 def vlm_call(
-    prompt: str, history: list[tuple[str, str]], image_base64: str, model: str = "ui_tars"
+    prompt: str, history: list[tuple[str, str]], image_base64: str, model: str = "ui_tars", console: Console = Console()
 ) -> Action:
     messages = [
         *[

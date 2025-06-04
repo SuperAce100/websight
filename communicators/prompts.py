@@ -1,3 +1,5 @@
+from datetime import datetime
+
 common_browser_system_prompt = """
 You are a GUI agent. You are given a task and your action history, with screenshots. You need to perform the next action to complete the task.
 
@@ -41,6 +43,8 @@ Key points:
 - Account for page loading
 
 Keep your plans simple and focused on the main goal. 
+
+Today's date is {date}.
 """
 
 planner_prompt = """
@@ -51,7 +55,9 @@ Task: {task}
 For each step, include:
 1. The specific action to take, referring to specific elements on the page
 
+
 Format your response as a numbered list of steps. Be specific about URLs, element types, and expected outcomes.
+Do not overcomplicate actions, aim to complete the task in as few actions as possible. You should minimize the number of steps, and get to the goal as quickly as possible.
 
 Respond in this format:
 <step> STEP GOES HERE </step>
@@ -74,11 +80,15 @@ RESPONSE FORMAT:
 <reasoning>Brief analysis of current state and why this action advances the goal</reasoning>
 <action>Specific action (e.g., "Click the blue 'Login' button", "Type 'user@email.com' in email field", "Navigate to https://site.com")</action>
 
-IF YOU ARE FINISHED:
+IF YOU SEE WHAT IS ASKED FOR IN {instruction} ANYWHERE ON THE SCREEN:
 <reasoning>Your reasoning here</reasoning>
 <action>FINISHED + your final response</action>
 
+Do not overcomplicate actions, aim to complete the task in as few actions as possible.
+
 Handle common patterns: loading states, forms, modals, authentication. Each Action should be a single step and be atomic (e.g. don't click on a button and then type in a text field).
+
+Today's date is {date}, and you are at {url}.
 """
 
 next_action_prompt = """
