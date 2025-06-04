@@ -6,7 +6,7 @@ from communicators.prompts import (
     next_action_prompt,
     next_action_system_prompt,
 )
-from communicators.uitars import ui_tars_call, Action
+from communicators.vlm import vlm_call, Action
 from communicators.llms import llm_call, llm_call_image
 from rich.console import Console
 import re
@@ -17,9 +17,10 @@ NEXT_ACTION_MODEL = "openai/gpt-4.1-mini"
 
 
 class Agent:
-    def __init__(self):
+    def __init__(self, use_websight: bool = True):
         self.browser = Browser()
         self.console = Console()
+        self.use_websight = use_websight
 
     def execute_action(
         self, next_action: str, history: list[tuple[str, str]]
@@ -38,10 +39,9 @@ class Agent:
                 reasoning=f"Navigated to {url}",
             )
 
-        action = ui_tars_call(
-            next_action, history, current_state.page_screenshot_base64
+        action = vlm_call(
+            next_action, history, current_state.page_screenshot_base64, model="websight" if self.use_websight else "ui_tars"
         )
-        
 
         try:
             if action.action == "click":
@@ -134,11 +134,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", type=str, required=True)
     parser.add_argument("--max-iters", type=int, default=25)
+    parser.add_argument("--use-websight", action="store_true")
     args = parser.parse_args()
     task = args.task
     console = Console()
     console.print(f"[green]Task:[/green] {task}")
-    agent = Agent()
+    agent = Agent(use_websight=args.use_websight)
     result = agent.run(task, args.max_iters)
     if "Error" not in result:
         console.print(f"[green]Result:[/green] {result}")

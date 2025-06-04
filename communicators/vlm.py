@@ -1,13 +1,14 @@
 # Use a pipeline as a high-level helper
 import re
-from transformers import pipeline
 from pydantic import BaseModel
 from rich.console import Console
 from communicators.prompts import common_browser_system_prompt
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, AutoProcessor
+from peft import PeftModel, PeftConfig
 
-pipe = pipeline("image-text-to-text", model="ByteDance-Seed/UI-TARS-1.5-7B")
+ui_tars_pipe = pipeline("image-text-to-text", model="ByteDance-Seed/UI-TARS-1.5-7B")
 
-console = Console()
+websight_pipe = pipeline("image-text-to-text", model="tanvirb/websight-7B")
 
 
 class Action(BaseModel):
@@ -15,9 +16,22 @@ class Action(BaseModel):
     args: dict[str, str]
     reasoning: str
 
+def websight_call(
+    messages: list[dict[str, str]], max_new_tokens: int = 1000
+) -> str:
+    response = websight_pipe(text=messages, max_new_tokens=max_new_tokens)
+    return response[0]["generated_text"]
 
 def ui_tars_call(
-    prompt: str, history: list[tuple[str, str]], image_base64: str
+    messages: list[dict[str, str]], max_new_tokens: int = 1000
+) -> str:
+    response = ui_tars_pipe(text=messages, max_new_tokens=max_new_tokens)
+    return response[-1]["generated_text"][-1]["content"]
+
+
+
+def vlm_call(
+    prompt: str, history: list[tuple[str, str]], image_base64: str, model: str = "ui_tars"
 ) -> Action:
     messages = [
         *[
@@ -54,8 +68,10 @@ def ui_tars_call(
             ],
         },
     ]
-    response = pipe(text=messages, max_new_tokens=1000)
-    response_text = response[-1]["generated_text"][-1]["content"]
+    if model == "ui_tars":
+        response_text = ui_tars_call(messages)
+    elif model == "websight":
+        response_text = websight_call(messages)
 
     try:
         response_text = "temp " + response_text
