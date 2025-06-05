@@ -26,7 +26,7 @@ def get_args():
     p.add_argument("--img_root", default="images")
     p.add_argument("--model", default="ByteDance-Seed/UI-TARS-1.5-7B")
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--val_frac", type=float, default=0.03)
+    p.add_argument("--val_frac", type=float, default=0.03
     p.add_argument("--test_frac", type=float, default=0.03)
     return p.parse_args()
 

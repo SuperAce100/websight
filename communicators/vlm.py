@@ -20,7 +20,7 @@ def websight_call(
     messages: list[dict[str, str]], max_new_tokens: int = 1000
 ) -> str:
     response = websight_pipe(text=messages, max_new_tokens=max_new_tokens)
-    return response[0]["generated_text"]
+    return response[0]["generated_text"][-1]["content"]
 
 def ui_tars_call(
     messages: list[dict[str, str]], max_new_tokens: int = 1000
@@ -79,12 +79,12 @@ def vlm_call(
         action = response_text.split("Action: ")[1].strip()
     except Exception as e:
         console.print(
-            f"[red]Error parsing UI-TARS response: {e}.[/red]\n[red]Response:[/red] {response_text}"
+            f"[red]Error parsing {model} response: {e}.[/red]\n[red]Response:[/red] {response_text}"
         )
         return Action(action="error", args={}, reasoning=response_text)
 
-    console.print(f"[blue]UI TARS Action:[/blue] {action}")
-    console.print(f"[blue]UI TARS Reasoning:[/blue] {reasoning}")
+    console.print(f"[blue]{model} Action:[/blue] {action}")
+    console.print(f"[blue]{model} Reasoning:[/blue] {reasoning}")
     return parse_action(action, reasoning)
 
 
