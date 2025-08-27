@@ -75,11 +75,6 @@ def websight_call(
         image_base64: The base64 encoded image to generate an action for.
         history: The history of actions and reasoning.
     """
-    if not image_base64 or "data:image/png;base64," not in image_base64:
-        raise ValueError(
-            "image_base64 is required and must be a base64 encoded png image"
-        )
-
     console = console or Console()
     messages = _build_messages(prompt, history, image_base64)
     pipe = (pipe_factory or _get_websight_pipe)()
