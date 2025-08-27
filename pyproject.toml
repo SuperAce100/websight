@@ -32,6 +32,14 @@ members = [
     "LLaMA-Factory",
 ]
 
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = {find = {where = ["src"]}}
+
+
 [dependency-groups]
 test = [
     "pytest>=8.0.0",

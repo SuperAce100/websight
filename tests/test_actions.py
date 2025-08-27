@@ -1,4 +1,4 @@
-from agent.actions import parse_action
+from websight.model.actions import parse_action
 
 
 def test_parse_click_point():

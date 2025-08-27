@@ -11,7 +11,7 @@ from datasets import Dataset
 from rich.console import Console
 from rich.progress import Progress
 
-from model.websight import websight_call
+from websight.model.websight import websight_call
 from eval.showdown.utils import (
     check_prediction_in_bbox,
     print_colored_result,

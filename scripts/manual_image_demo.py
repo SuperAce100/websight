@@ -3,7 +3,7 @@ import base64
 from pathlib import Path
 from rich.console import Console
 
-from model.websight import websight_call
+from websight import websight_call
 
 
 def to_data_url(path: Path) -> str:

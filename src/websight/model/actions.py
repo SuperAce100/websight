@@ -10,22 +10,6 @@ class Action(BaseModel):
 
 
 def parse_action(action_text: str, reasoning: str) -> Action:
-    """
-    Parse a model action string into a structured Action.
-
-    Supported formats (UI-TARS/Websight style):
-    - click(point='(x, y)') or click(start_box='(x, y)')
-    - left_double(start_box='(x, y)')
-    - right_single(start_box='(x, y)')
-    - drag(start_box='(x1, y1)', end_box='(x2, y2)')
-    - hotkey(key='ctrl c')
-    - type(content='hello')
-    - scroll(point='(x, y)', direction='down') or scroll(start_box='(x, y)', direction='down')
-    - wait()
-    - finished(content='...')
-    - goto_url(url='https://example.com')
-    """
-
     action = action_text.strip()
 
     def _extract_coords(source: str) -> tuple[int, int]:
@@ -84,7 +68,6 @@ def parse_action(action_text: str, reasoning: str) -> Action:
         if "point='" in action or "start_box='" in action:
             x, y = _extract_coords(action)
         else:
-            # Fallback: no point specified
             x, y = 500, 500
         direction = action.split("direction='")[1].split("'")[0]
         return Action(

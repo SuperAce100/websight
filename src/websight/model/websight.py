@@ -4,8 +4,8 @@ from typing import Callable
 from rich.console import Console
 from transformers import pipeline
 
-from agent.prompts import common_browser_system_prompt
-from agent.actions import Action, parse_action
+from websight.model.prompts import common_browser_system_prompt
+from websight.model.actions import Action, parse_action
 
 
 _websight_pipe = None
@@ -67,16 +67,11 @@ def websight_call(
     max_new_tokens: int = 1000,
     pipe_factory: Callable[[], Callable[..., list]] | None = None,
 ) -> Action:
-    """
-    Single entry point to call a VLM (Websight or UI-TARS) and parse the action.
-    """
     console = console or Console()
     messages = _build_messages(prompt, history, image_base64)
-
     pipe = (pipe_factory or _get_websight_pipe)()
     response = pipe(text=messages, max_new_tokens=max_new_tokens)  # type: ignore[call-arg]
     response_text = response[0]["generated_text"][-1]["content"]  # type: ignore[index]
-
     try:
         response_text = "temp " + str(response_text)
         reasoning = response_text.split("Thought: ")[1].split("\nAction: ")[0].strip()

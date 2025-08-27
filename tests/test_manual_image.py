@@ -2,7 +2,7 @@ import base64
 from pathlib import Path
 from unittest.mock import patch
 
-from model.websight import websight_call
+from websight import websight_call
 
 
 def load_image_b64(path: Path) -> str:
@@ -10,7 +10,7 @@ def load_image_b64(path: Path) -> str:
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
 
-@patch("model.websight._get_websight_pipe")
+@patch("websight.model.websight._get_websight_pipe")
 def test_manual_websight_on_sample_image(mock_factory):
     # This manual test fakes the model output but exercises the end-to-end call path
     def fake_pipe(**kwargs):
@@ -35,3 +35,7 @@ def test_manual_websight_on_sample_image(mock_factory):
     )
     assert action.action == "click"
     assert action.args == {"x": "100", "y": "200"}
+
+
+if __name__ == "__main__":
+    test_manual_websight_on_sample_image(None)
