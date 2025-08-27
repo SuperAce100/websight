@@ -31,3 +31,9 @@ dependencies = [
 members = [
     "LLaMA-Factory",
 ]
+
+[dependency-groups]
+test = [
+    "pytest>=8.0.0",
+    "pytest-mock>=3.12.0",
+]

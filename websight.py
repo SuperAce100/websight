@@ -1,13 +1,14 @@
 import argparse
-from browser import Browser, BrowserState
-from communicators.prompts import (
+from agent.browser import Browser, BrowserState
+from agent.prompts import (
     planner_prompt,
     planner_system_prompt,
     next_action_prompt,
     next_action_system_prompt,
 )
-from communicators.vlm import vlm_call, Action
-from communicators.llms import llm_call, llm_call_image
+from model.websight import websight_call
+from agent.actions import Action
+from model import llm_call, llm_call_image
 from rich.console import Console
 import re
 from datetime import datetime
@@ -24,7 +25,7 @@ class Agent:
 
     def execute_action(
         self, next_action: str, history: list[tuple[str, str]]
-    ) -> Action | None:
+    ) -> Action | str | None:
         current_state = self.browser.get_state()
 
         url_pattern = r'https?://[^\s<>"]+|www\.[^\s<>"]+'
@@ -39,8 +40,11 @@ class Agent:
                 reasoning=f"Navigated to {url}",
             )
 
-        action = vlm_call(
-            next_action, history, current_state.page_screenshot_base64, model="websight" if self.use_websight else "ui_tars", console=self.console
+        action = websight_call(
+            next_action,
+            history,
+            current_state.page_screenshot_base64,
+            console=self.console,
         )
 
         try:
@@ -83,7 +87,9 @@ class Agent:
     def make_plan(self, task: str) -> list[str]:
         response = llm_call(
             planner_prompt.format(task=task),
-            system_prompt=planner_system_prompt.format(date=datetime.now().strftime("%Y-%m-%d")),
+            system_prompt=planner_system_prompt.format(
+                date=datetime.now().strftime("%Y-%m-%d")
+            ),
             model=PLANNING_MODEL,
         )
 
@@ -95,12 +101,20 @@ class Agent:
         return steps
 
     def choose_next_action(
-        self, task: str, plan: list[str], state: BrowserState, history: list[tuple[str, str]]
+        self,
+        task: str,
+        plan: list[str],
+        state: BrowserState,
+        history: list[tuple[str, str]],
     ) -> tuple[str, str]:
         response = llm_call_image(
             state.page_screenshot_base64,
             next_action_prompt.format(plan=plan, history=history, instruction=task),
-            system_prompt=next_action_system_prompt.format(instruction=task, date=datetime.now().strftime("%Y-%m-%d"), url=state.page_url),
+            system_prompt=next_action_system_prompt.format(
+                instruction=task,
+                date=datetime.now().strftime("%Y-%m-%d"),
+                url=state.page_url,
+            ),
             model=NEXT_ACTION_MODEL,
         )
 
@@ -111,7 +125,7 @@ class Agent:
 
     def run(self, task: str, max_iterations: int = 25):
         plan = self.make_plan(task)
-        self.console.print(f"[green]Plan:[/green]")
+        self.console.print("[green]Plan:[/green]")
         for i, step in enumerate(plan, 1):
             self.console.print(f"{i}. {step}")
         history = []
@@ -123,7 +137,7 @@ class Agent:
             history.append((reasoning, action))
             if "finished" in action.lower():
                 self.console.print(
-                    f"[bold green]Task completed successfully[/bold green]"
+                    "[bold green]Task completed successfully[/bold green]"
                 )
                 return action
 
@@ -142,7 +156,7 @@ def main():
     console.print(f"[green]Task:[/green] {task}")
     agent = Agent(use_websight=args.use_websight, show_browser=args.show_browser)
     result = agent.run(task, args.max_iters)
-    if "Error" not in result:
+    if isinstance(result, str) and "Error" not in result:
         console.print(f"[green]Result:[/green] {result}")
     else:
         console.print(f"[red]Error:[/red] {result}.")

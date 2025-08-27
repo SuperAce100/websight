@@ -1,5 +1,3 @@
-from datetime import datetime
-
 common_browser_system_prompt = """
 You are a GUI agent. You are given a task. You need to make single optimal click that exactly matches the task. Be very precise with your clicks. If the task includes a particular element, click on it. Don't overthink it.
 
@@ -16,10 +14,10 @@ left_double(point='<point>x1 y1</point>')
 right_single(point='<point>x1 y1</point>')
 drag(start_point='<point>x1 y1</point>', end_point='<point>x2 y2</point>')
 hotkey(key='ctrl c') # Split keys with a space and use lowercase. Also, do not use more than 3 keys in one hotkey action.
-type(content='xxx') # Use escape characters \\', \\\", and \\n in content part to ensure we can parse the content in normal python string format. If you want to submit your input, use \\n at the end of content. 
+type(content='xxx') # Use escape characters \\', \\", and \\n in content part to ensure we can parse the content in normal python string format. If you want to submit your input, use \\n at the end of content. 
 scroll(point='<point>x1 y1</point>', direction='down or up or right or left') # Show more information on the `direction` side.
 wait() #Sleep for 5s and take a screenshot to check for any changes.
-finished(content='xxx') # Use escape characters \\', \\", and \\n in content part to ensure we can parse the content in normal python string format.
+finished(content='xxx') # Use escape characters \\', \", and \\n in content part to ensure we can parse the content in normal python string format.
 
 ## Note
 - Use {language} in `Thought` part.
@@ -43,6 +41,7 @@ Keep your plans simple and focused on the main goal.
 Today's date is {date}.
 """
 
+
 planner_prompt = """
 Create a detailed plan for a browsing agent to complete the following task. Break it down into specific, actionable steps.
 
@@ -60,6 +59,7 @@ Respond in this format:
 <step> STEP GOES HERE </step>
 ...
 """
+
 
 next_action_system_prompt = """
 You are a web automation agent using ReAct framework. Your goal: complete tasks efficiently and handle failures gracefully.
@@ -86,6 +86,7 @@ Handle common patterns: loading states, forms, modals, authentication. Each Acti
 
 Today's date is {date}, and you are at {url}.
 """
+
 
 next_action_prompt = """
 TASK: {plan}
