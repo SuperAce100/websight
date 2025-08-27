@@ -7,13 +7,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", type=str, required=True)
     parser.add_argument("--max-iters", type=int, default=25)
-    parser.add_argument("--use-websight", action="store_true")
     parser.add_argument("--show-browser", action="store_true")
     args = parser.parse_args()
     task = args.task
     console = Console()
     console.print(f"[green]Task:[/green] {task}")
-    agent = Agent(use_websight=args.use_websight, show_browser=args.show_browser)
+    agent = Agent(show_browser=args.show_browser)
     result = agent.run(task, args.max_iters)
     if isinstance(result, str) and "Error" not in result:
         console.print(f"[green]Result:[/green] {result}")

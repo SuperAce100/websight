@@ -61,12 +61,25 @@ def _build_messages(
 
 def websight_call(
     prompt: str,
-    history: list[tuple[str, str]],
     image_base64: str,
+    history: list[tuple[str, str]] = [],
     console: Console | None = None,
     max_new_tokens: int = 1000,
     pipe_factory: Callable[[], Callable[..., list]] | None = None,
 ) -> Action:
+    """
+    Call the Websight model to generate an action.
+
+    Args:
+        prompt: The prompt to generate an action for.
+        image_base64: The base64 encoded image to generate an action for.
+        history: The history of actions and reasoning.
+    """
+    if not image_base64 or "data:image/png;base64," not in image_base64:
+        raise ValueError(
+            "image_base64 is required and must be a base64 encoded png image"
+        )
+
     console = console or Console()
     messages = _build_messages(prompt, history, image_base64)
     pipe = (pipe_factory or _get_websight_pipe)()
